@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from clms_aoi.aoi import BoundingBox
@@ -73,8 +74,25 @@ function getColor(value) {
 class ForestTypeProduct(BaseProduct):
     COLLECTION_ID = COLLECTION_ID
 
-    def fetch(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
-        raise NotImplementedError
+    def visualize(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
+        lulc_img = self._request_data(
+            bbox,
+            geometry,
+            year,
+            evalscript=EVALSCRIPT,
+        )
+        print(
+            f"Returned data is of type = {type(lulc_img)} and length {len(lulc_img)}.")
+        return lulc_img
 
-    def summarise(self, raw: Any) -> pd.DataFrame:
-        raise NotImplementedError
+    def statistics(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
+        # stats = self._request_data(
+        #     bbox,
+        #     geometry,
+        #     year,
+        #     evalscript=_STATS_EVALSCRIPT,
+        # )
+        result = np.random.rand(10, 10)  # Placeholder for actual stats
+        print(
+            f"Returned data is of type = {"stats"} and length {len(result)}.")
+        return result

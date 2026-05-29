@@ -5,13 +5,19 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-import requests
-import pandas as pd
+from sentinelhub import (
+    DataCollection,
+    SentinelHubRequest,
+    CRS,
+    MimeType,
+    Geometry,
+)
 
 from clms_aoi.aoi import BoundingBox
 from clms_aoi.auth import TokenCache
 
-_STATS_URL = "https://services.sentinel-hub.com/api/v1/statistics"
+_CDSE_BASE_URL = "https://sh.dataspace.copernicus.eu"
+_STATS_PATH = "/api/v1/statistics"
 
 
 class BaseProduct(ABC):
@@ -20,72 +26,44 @@ class BaseProduct(ABC):
     #: Sentinel Hub collection ID (BYOC).
     COLLECTION_ID: str = ""
 
-    def __init__(self, token_cache: TokenCache) -> None:
-        self._token_cache = token_cache
+    def __init__(self, config: any, base_url: str = _CDSE_BASE_URL) -> None:
+        self._config = config
+        self._stats_url = base_url.rstrip("/") + _STATS_PATH
 
     @abstractmethod
-    def fetch(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
-        """Fetch raw statistics for *bbox*/*geometry* in *year*."""
+    def visualize() -> Any:
+        """Return a visualization of the product (e.g. a color map)."""
 
     @abstractmethod
-    def summarise(self, raw: Any) -> pd.DataFrame:
-        """Convert the raw fetch result into a summary DataFrame."""
+    def statistics() -> Any:
+        """Return a visualization of the product (e.g. a color map)."""
 
-    def run(self, bbox: BoundingBox, geometry: dict, year: int) -> pd.DataFrame:
-        """Convenience: fetch then summarise."""
-        return self.summarise(self.fetch(bbox, geometry, year))
-
-    def _fetch_statistics(
+    def _request_data(
         self,
         bbox: BoundingBox,
         geometry: dict,
         year: int,
         evalscript: str,
-        calculations: dict,
         resolution: float = 0.001,
-    ) -> dict:
+    ) -> any:
         """Call the Sentinel Hub Statistical API and return the parsed JSON."""
-        token = self._token_cache.get_token()
-        body = {
-            "input": {
-                "bounds": {
-                    "geometry": geometry,
-                    "properties": {
-                        "crs": "http://www.opengis.net/def/crs/EPSG/0/4326"
-                    },
-                },
-                "data": [
-                    {
-                        "type": f"byoc-{self.COLLECTION_ID}",
-                        "dataFilter": {
-                            "timeRange": {
-                                "from": f"{year}-01-01T00:00:00Z",
-                                "to": f"{year}-12-31T23:59:59Z",
-                            }
-                        },
-                    }
-                ],
-            },
-            "aggregation": {
-                "timeRange": {
-                    "from": f"{year}-01-01T00:00:00Z",
-                    "to": f"{year}-12-31T23:59:59Z",
-                },
-                "aggregationInterval": {"of": "P1Y"},
-                "evalscript": evalscript,
-                "resx": resolution,
-                "resy": resolution,
-            },
-            "calculations": calculations,
-        }
-        resp = requests.post(
-            _STATS_URL,
-            json=body,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-            },
-            timeout=120,
+        geometry = Geometry(geometry, crs=CRS.WGS84)
+        request = SentinelHubRequest(
+            evalscript=evalscript,
+            input_data=[
+                SentinelHubRequest.input_data(
+                    data_collection=DataCollection.define_byoc(
+                        self.COLLECTION_ID
+                    ),
+                    time_interval=(f"{year}-01-01", f"{year}-12-31"),
+                ),
+            ],
+            responses=[
+                SentinelHubRequest.output_response("default", MimeType.PNG),
+            ],
+            geometry=geometry,
+            resolution=[resolution, resolution],
+            config=self._config,
         )
-        resp.raise_for_status()
-        return resp.json()
+        print("Request created successfully")
+        return request.get_data()

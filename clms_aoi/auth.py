@@ -8,6 +8,7 @@ from typing import Any
 
 import requests
 import yaml
+from sentinelhub import SHConfig
 
 
 def load_config(path: str | Path) -> dict[str, Any]:
@@ -47,13 +48,39 @@ class TokenCache:
         self._expires_at = time.monotonic() + payload.get("expires_in", 3600) - 60
 
 
+_CDSE_TOKEN_URL = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
+_CDSE_BASE_URL = "https://sh.dataspace.copernicus.eu"
+
+
 def build_token_cache(config: dict[str, Any]) -> TokenCache:
     """Construct a TokenCache from the loaded config dict."""
     sh = config["sentinel_hub"]
     return TokenCache(
         client_id=sh["client_id"],
         client_secret=sh["client_secret"],
-        token_url=sh.get(
-            "token_url", "https://services.sentinel-hub.com/oauth/token"
-        ),
+        token_url=sh.get("token_url", _CDSE_TOKEN_URL),
     )
+
+
+def token_cache_from_sh_config(sh_config: SHConfig) -> TokenCache:
+    """Build a TokenCache from an already-loaded SHConfig profile."""
+    return TokenCache(
+        client_id=sh_config.sh_client_id,
+        client_secret=sh_config.sh_client_secret,
+        token_url=sh_config.sh_token_url,
+    )
+
+
+def build_sh_config(config: dict[str, Any]) -> SHConfig:
+    """Create, save, and return an SHConfig profile built from the config dict."""
+    sh = config["sentinel_hub"]
+    profile = sh.get("profile", "cdse")
+
+    sh_config = SHConfig()
+    sh_config.sh_client_id = sh["client_id"]
+    sh_config.sh_client_secret = sh["client_secret"]
+    sh_config.sh_token_url = sh.get("token_url", _CDSE_TOKEN_URL)
+    sh_config.sh_base_url = sh.get("base_url", _CDSE_BASE_URL)
+    sh_config.save(profile)
+
+    return SHConfig(profile)
