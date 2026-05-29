@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "clms-aoi"
+version = "0.1.0"
+description = "Analyse Copernicus Land Monitoring Service products for an area of interest."
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "geopandas>=0.14",
+    "matplotlib>=3.8",
+    "pandas>=2.0",
+    "pyproj>=3.6",
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+]
+
+[project.scripts]
+clms-aoi = "clms_aoi.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["clms_aoi*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

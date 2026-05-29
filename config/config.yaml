@@ -1,0 +1,6 @@
+# Sentinel Hub credentials
+# Obtain these from https://apps.sentinel-hub.com/dashboard/#/account/settings
+sentinel_hub:
+  client_id: "YOUR_CLIENT_ID"
+  client_secret: "YOUR_CLIENT_SECRET"
+  # token_url: "https://services.sentinel-hub.com/oauth/token"  # default
