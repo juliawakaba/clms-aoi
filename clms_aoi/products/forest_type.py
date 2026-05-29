@@ -72,9 +72,8 @@ function getColor(value) {
 
 class ForestTypeProduct(BaseProduct):
     COLLECTION_ID = COLLECTION_ID
-    EVALSCRIPT = EVALSCRIPT
 
-    def fetch(self, bbox: BoundingBox, date: str) -> Any:
+    def fetch(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
         raise NotImplementedError
 
     def summarise(self, raw: Any) -> pd.DataFrame:

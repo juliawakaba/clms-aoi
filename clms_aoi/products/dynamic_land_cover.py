@@ -1,4 +1,4 @@
-"""CORINE Land Cover product."""
+"""CORINE / Dynamic Land Cover product."""
 
 from __future__ import annotations
 
@@ -11,48 +11,63 @@ from clms_aoi.products.base import BaseProduct
 
 COLLECTION_ID = "828f6b20-8ffd-48f8-a1da-fefd271456db"
 
-EVALSCRIPT = """
-//VERSION=3
 
+_STATS_EVALSCRIPT = """
+//VERSION=3
 function setup() {
     return {
-        input: ["LCM10", "dataMask"],
-        output: {
-            bands: 4,
-            sampleType: "AUTO",
-        },
+        input: [{ bands: ["LCM10", "dataMask"] }],
+        output: [
+            { id: "LCM10", bands: 1, sampleType: "UINT8" },
+            { id: "dataMask", bands: 1 }
+        ]
     };
 }
-
-const map = [
-    [10, 0x006400],
-    [20, 0xffbb22],
-    [30, 0xffff4c],
-    [40, 0xf096ff],
-    [50, 0x0096a0],
-    [60, 0x00cf75],
-    [70, 0xfae6a0],
-    [80, 0xb4b4b4],
-    [90, 0xfa0000],
-    [100, 0x0064c8],
-    [110, 0xf0f0f0],
-    [254, 0x0a0a0a],
-];
-
-const visualizer = new ColorMapVisualizer(map);
-
-function evaluatePixel(sample) {
-    return visualizer.process(sample.LCM10).concat(sample.dataMask);
+function evaluatePixel(samples) {
+    return {
+        LCM10: [samples.LCM10],
+        dataMask: [samples.dataMask]
+    };
 }
 """
 
 
-class CorineProduct(BaseProduct):
+class DynamicLandCover(BaseProduct):
     COLLECTION_ID = COLLECTION_ID
-    EVALSCRIPT = EVALSCRIPT
 
-    def fetch(self, bbox: BoundingBox, date: str) -> Any:
-        raise NotImplementedError
+    def fetch(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
+        return self._fetch_statistics(
+            bbox,
+            geometry,
+            year,
+            evalscript=_STATS_EVALSCRIPT,
+            calculations=_CALCULATIONS,
+        )
 
     def summarise(self, raw: Any) -> pd.DataFrame:
-        raise NotImplementedError
+        data_items = raw.get("data", [])
+        if not data_items or data_items[0].get("status") != "OK":
+            return pd.DataFrame(columns=["class", "pixels", "pct"])
+
+        bins = (
+            data_items[0]["outputs"]["LCM10"]["bands"]["B0"]["histogram"]["bins"]
+        )
+        total = sum(b["count"] for b in bins)
+        if total == 0:
+            return pd.DataFrame(columns=["class", "pixels", "pct"])
+
+        rows = []
+        for b in bins:
+            count = b["count"]
+            if count == 0:
+                continue
+            midpoint = (b["lowEdge"] + b["highEdge"]) / 2
+            class_value = round(midpoint / 10) * 10
+            label = _CLASS_LABELS.get(class_value, f"Class {class_value}")
+            rows.append({
+                "class": label,
+                "pixels": count,
+                "pct": round(100 * count / total, 2),
+            })
+
+        return pd.DataFrame(rows).reset_index(drop=True)

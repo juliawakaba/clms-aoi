@@ -70,6 +70,12 @@ def aoi_geojson(gdf: gpd.GeoDataFrame) -> dict:
     return mapping(union)
 
 
+def compute_area_ha(gdf: gpd.GeoDataFrame) -> float:
+    """Compute total area of AOI in hectares using an equal-area projection."""
+    gdf_ea = gdf.to_crs("EPSG:6933")
+    return float(gdf_ea.geometry.area.sum() / 10_000)
+
+
 def prepare_aoi(path: str | Path) -> tuple[gpd.GeoDataFrame, BoundingBox]:
     """Full pipeline: load → validate → reproject → bbox."""
     gdf = load_aoi(path)

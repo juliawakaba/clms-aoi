@@ -9,7 +9,7 @@ import click
 
 from clms_aoi import __version__
 from clms_aoi.auth import build_token_cache, load_config
-from clms_aoi.aoi import prepare_aoi
+from clms_aoi.aoi import aoi_geojson, prepare_aoi
 from clms_aoi.outputs import write_chart, write_csv
 
 _PRODUCTS = ("corine", "forest_type", "imperviousness", "tree_cover")
@@ -31,11 +31,11 @@ def cli() -> None:
     help="CLMS product to analyse.",
 )
 @click.option(
-    "--date",
-    "-d",
+    "--year",
+    "-y",
     required=True,
-    metavar="YYYY-MM-DD",
-    help="Acquisition date for the product.",
+    type=int,
+    help="Year to analyse (e.g. 2020).",
 )
 @click.option(
     "--config",
@@ -62,7 +62,7 @@ def cli() -> None:
 def analyse(
     aoi_path: Path,
     product: str,
-    date: str,
+    year: int,
     config: Path,
     out_csv: Path,
     out_chart: Path,
@@ -70,19 +70,18 @@ def analyse(
     """Fetch a CLMS raster for AOI and write a summary CSV + bar chart."""
     cfg = load_config(config)
     token_cache = build_token_cache(cfg)
-    token = token_cache.get_token()
 
     gdf, bbox = prepare_aoi(aoi_path)
+    geometry = aoi_geojson(gdf)
     click.echo(f"AOI bbox: {bbox}")
 
-    # Import the requested product module dynamically.
     import importlib
 
     mod = importlib.import_module(f"clms_aoi.products.{product}")
     cls_name = "".join(part.title() for part in product.split("_")) + "Product"
-    product_obj = getattr(mod, cls_name)(token)
+    product_obj = getattr(mod, cls_name)(token_cache)
 
-    df = product_obj.run(bbox, date)
+    df = product_obj.run(bbox, geometry, year)
 
     csv_path = write_csv(df, out_csv)
     click.echo(f"CSV written to {csv_path}")
@@ -94,7 +93,7 @@ def analyse(
             x=x_col,
             y=y_col,
             path=out_chart,
-            title=f"{product.replace('_', ' ').title()} — {date}",
+            title=f"{product.replace('_', ' ').title()} — {year}",
         )
         click.echo(f"Chart written to {chart_path}")
     else:
