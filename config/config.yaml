@@ -1,5 +1,0 @@
-# Sentinel Hub credentials
-# Obtain these from https://apps.sentinel-hub.com/dashboard/#/account/settings
-sentinel_hub:
-  client_id: "sh-38df7772-5d60-4e06-8947-7d8aacb9eef1"
-  client_secret: "iImsCgGDvlAH3SP8gExz63BKZNdHgXAO"

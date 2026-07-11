@@ -24,21 +24,39 @@ Land use analysts, GIS practitioners, students, NGOs, and small consultancies wh
 ---
 
 ## Installation
-
+For users:
 ```bash
 pip install clms-aoi
 ```
-
+for devs
+1. Clone the repository
+2. Change directory into the cloned folder
+```bash
+cd clms-aoi
+```
+3. Create a virtual environment and activate it
+```bash
+python3 -m venv clms_aoi_env && source clms_aoi_env/bin/activate
+```
+4. Do an editable install which means edits to the source code keep working without reinstalling
+```bash
+pip install -e .
+```
 ---
 
 ## Configuration
 
-Create a config file at `~/.clms-aoi/config.yml` with your Sentinel Hub credentials:
+Create a config file at `config/config.yaml` with your Sentinel Hub credentials:
 
 ```yaml
-sentinel_hub:
+sentinelhub:
   client_id: "your-client-id"
   client_secret: "your-client-secret"
+
+aoi:
+  path: "sample_data/sample_aoi.geojson"
+  target_crs: "EPSG:4326"
+
 
 defaults:
   output_dir: "./clms-aoi-output"
@@ -52,6 +70,9 @@ You can point to a different config file at runtime using the `--config` flag.
 ## CLI usage
 
 ```bash
+# To check correct credentials 
+clms-aoi check-auth --config config/config.yaml
+
 # Single year, chart output
 clms-aoi land-cover --aoi ./boundary.geojson --year 2020 --output ./out --format chart
 
