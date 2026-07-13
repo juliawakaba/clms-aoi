@@ -7,6 +7,13 @@ name = "clms-aoi"
 version = "0.1.0"
 description = "Analyse Copernicus Land Monitoring Service products for an area of interest."
 requires-python = ">=3.10"
+
+authors = [
+    { name = "Victor Ademoyero" },
+    { name = "Julia Wakaba" },
+    { name = "Riya Pokhrel" },
+]
+
 dependencies = [
     "click>=8.1",
     "geopandas>=0.14",
@@ -34,3 +41,6 @@ include = ["clms_aoi*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+"clms_aoi.resources" = ["*.yaml", "*.geojson"]

@@ -13,3 +13,6 @@ output/
 .pytest_cache/
 .coverage
 htmlcov/
+
+config/*
+config/config.yaml

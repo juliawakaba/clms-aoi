@@ -1,0 +1,9 @@
+geopandas
+shapely
+pyyaml
+sentinelhub
+requests
+
+# for dev/test only
+pytest
+responses
