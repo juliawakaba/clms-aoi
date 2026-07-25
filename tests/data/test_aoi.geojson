@@ -1,0 +1,13 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Test AOI"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[13.0, 47.8], [13.1, 47.8], [13.1, 47.9], [13.0, 47.9], [13.0, 47.8]]]
+      }
+    }
+  ]
+}
