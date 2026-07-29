@@ -19,6 +19,7 @@ def setup_logging(verbose: bool = False):
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+
 def cmd_validate_config(args):
     """Validates the given YAML configuration file."""
     try:
@@ -27,8 +28,9 @@ def cmd_validate_config(args):
         logging.info("Products configured: {config.products}")
         return 0
     except ClmsAoiError as error:
-        logging.error("Config Validation Error: {error}")
+        logging.error(f"Config Validation Error: {error}")
         return 1
+
 
 def cmd_check_auth(args):
     """Tests authentication against Sentinel Hub."""
@@ -42,7 +44,7 @@ def cmd_check_auth(args):
     except ClmsAoiError as error:
         logging.error("Authentication Failed: {error}")
         return 1
-   
+
 
 def cmd_check_aoi(args) -> int:
     """Validate vector GeoJSON or GeoPackage boundary file."""
@@ -57,22 +59,29 @@ def cmd_check_aoi(args) -> int:
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="clms-aoi", description="CLMS AOI Analysis Tool")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging output")
-    
+    parser = argparse.ArgumentParser(
+        prog="clms-aoi", description="CLMS AOI Analysis Tool")
+    parser.add_argument("--verbose", "-v", action="store_true",
+                        help="Enable debug logging output")
+
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # Command to validate-config
-    clms_validate = subparsers.add_parser("validate-config", help="Validate YAML config file")
+    clms_validate = subparsers.add_parser(
+        "validate-config", help="Validate YAML config file")
     clms_validate.add_argument("path", help="Path to config YAML file")
 
     # Command: check-auth
-    clms_auth = subparsers.add_parser("check-auth", help="Test Sentinel Hub authentication")
-    clms_auth.add_argument("--config", default="config.yaml", help="Path to config YAML file")
+    clms_auth = subparsers.add_parser(
+        "check-auth", help="Test Sentinel Hub authentication")
+    clms_auth.add_argument("--config", default="config.yaml",
+                           help="Path to config YAML file")
 
     # Command: check-aoi
-    clms_aoi = subparsers.add_parser("check-aoi", help="Validate vector AOI boundary file (.geojson or .gpkg)")
-    clms_aoi.add_argument("--aoi", required=True, help="Path to boundary vector file")
+    clms_aoi = subparsers.add_parser(
+        "check-aoi", help="Validate vector AOI boundary file (.geojson or .gpkg)")
+    clms_aoi.add_argument("--aoi", required=True,
+                          help="Path to boundary vector file")
 
     args = parser.parse_args()
 

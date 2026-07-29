@@ -7,8 +7,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from clms_aoi.aoi import BoundingBox
 from clms_aoi.products.base import BaseProduct
+from clms_aoi.aoi import AOIHandler
 
 COLLECTION_ID = "828f6b20-8ffd-48f8-a1da-fefd271456db"
 
@@ -68,10 +68,10 @@ lulc_colors = {
 class DynamicLandCover(BaseProduct):
     COLLECTION_ID = COLLECTION_ID
 
-    def visualize(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
+    def visualize(self, aoi: AOIHandler, year: int) -> Any:
         lulc_img = self._request_data(
-            bbox,
-            geometry,
+            aoi.get_bbox(),
+            aoi.get_geometry(),
             year,
             evalscript=_STATS_EVALSCRIPT,
         )
@@ -79,7 +79,7 @@ class DynamicLandCover(BaseProduct):
             f"Returned data is of type = {type(lulc_img)} and length {len(lulc_img)}.")
         return lulc_img
 
-    def statistics(self, bbox: BoundingBox, geometry: dict, year: int) -> Any:
+    def statistics(self, bbox: tuple[float, float, float, float], geometry: dict, year: int) -> Any:
         # stats = self._request_data(
         #     bbox,
         #     geometry,

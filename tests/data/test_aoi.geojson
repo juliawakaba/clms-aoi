@@ -3,10 +3,35 @@
   "features": [
     {
       "type": "Feature",
-      "properties": {"name": "Test AOI"},
+      "properties": {
+        "name": "Test AOI"
+      },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[13.0, 47.8], [13.1, 47.8], [13.1, 47.9], [13.0, 47.9], [13.0, 47.8]]]
+        "coordinates": [
+          [
+            [
+              -8.5,
+              39.5
+            ],
+            [
+              -8.0,
+              39.5
+            ],
+            [
+              -8.0,
+              40.0
+            ],
+            [
+              -8.5,
+              40.0
+            ],
+            [
+              -8.5,
+              39.5
+            ]
+          ]
+        ]
       }
     }
   ]

@@ -11,7 +11,8 @@ class SentinelHubCredentials:
 
     def __init__(self, client_id=None, client_secret=None):
         self.client_id = client_id or os.getenv("CLMS_SH_CLIENT_ID")
-        self.client_secret = client_secret or os.getenv("CLMS_SH_CLIENT_SECRET")
+        self.client_secret = client_secret or os.getenv(
+            "CLMS_SH_CLIENT_SECRET")
 
     def get_client_id(self):
         return self.client_id

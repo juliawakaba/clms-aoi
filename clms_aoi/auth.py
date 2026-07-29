@@ -55,10 +55,12 @@ class SentinelHubAuthenticator:
             )
         except requests.RequestException as error:
             logger.error("Network error while requesting token: %s", error)
-            raise TokenRequestError(f"Could not reach Sentinel Hub token endpoint: {error}")
+            raise TokenRequestError(
+                f"Could not reach Sentinel Hub token endpoint: {error}")
 
         if response.status_code in (400, 401):
-            logger.error("Authentication failed with status code %s", response.status_code)
+            logger.error("Authentication failed with status code %s",
+                         response.status_code)
             raise InvalidCredentialsError(
                 f"Sentinel Hub rejected the credentials you gave (HTTP {response.status_code})."
             )
@@ -94,7 +96,7 @@ class SentinelHubAuthenticator:
 
         if save_profile:
             config.save(save_profile)
-            logger.info("Saved Sentinel Hub configuration profile: '%s'", save_profile)
+            logger.info(
+                "Saved Sentinel Hub configuration profile: '%s'", save_profile)
 
         return config
-

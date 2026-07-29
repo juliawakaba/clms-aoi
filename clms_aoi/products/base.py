@@ -13,8 +13,6 @@ from sentinelhub import (
     Geometry,
 )
 
-from clms_aoi.aoi import BoundingBox
-from clms_aoi.auth import TokenCache
 
 _CDSE_BASE_URL = "https://sh.dataspace.copernicus.eu"
 _STATS_PATH = "/api/v1/statistics"
@@ -40,8 +38,8 @@ class BaseProduct(ABC):
 
     def _request_data(
         self,
-        bbox: BoundingBox,
-        geometry: dict,
+        bbox:  tuple[float, float, float, float],
+        geometry: dict | none,
         year: int,
         evalscript: str,
         resolution: float = 0.001,
