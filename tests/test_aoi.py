@@ -1,48 +1,87 @@
-"""Tests for clms_aoi.aoi."""
+import os
+import warnings
 
-import pytest
-from shapely.geometry import box
 import geopandas as gpd
+import pytest
+from shapely.geometry import Polygon
 
-from clms_aoi.aoi import compute_bbox, reproject, validate_geometry, BoundingBox
-
-
-def _make_gdf(minx=-1.0, miny=50.0, maxx=1.0, maxy=52.0, crs="EPSG:4326"):
-    geom = box(minx, miny, maxx, maxy)
-    return gpd.GeoDataFrame(geometry=[geom], crs=crs)
-
-
-def test_compute_bbox():
-    gdf = _make_gdf()
-    bb = compute_bbox(gdf)
-    assert isinstance(bb, BoundingBox)
-    assert bb.west == pytest.approx(-1.0)
-    assert bb.north == pytest.approx(52.0)
+from clms_aoi.aoi import AOIHandler
+from clms_aoi.exceptions import (
+    AOICRSError,
+    AOIFileNotFoundError,
+    AOIFormatError,
+    AOIGeometryError,
+)
 
 
-def test_validate_geometry_passes():
-    gdf = _make_gdf()
-    assert validate_geometry(gdf) is not None
+@pytest.fixture(params=[(".gpkg", "GPKG"), (".geojson", "GeoJSON")])
+def sample_vector_file(request, tmp_path):
+    """Fixture that generates both GPKG and GeoJSON test files in EPSG:4326."""
+    ext, driver = request.param
+    poly = Polygon([(13.0, 47.8), (13.1, 47.8), (13.1, 47.9), (13.0, 47.9), (13.0, 47.8)])
+    gdf = gpd.GeoDataFrame({"id": [1]}, geometry=[poly], crs="EPSG:4326")
+
+    file_path = tmp_path / f"test_boundary{ext}"
+    gdf.to_file(file_path, driver=driver)
+    return str(file_path)
 
 
-def test_validate_geometry_raises_on_null():
-    gdf = _make_gdf()
-    gdf.loc[0, "geometry"] = None
-    with pytest.raises(ValueError, match="null"):
-        validate_geometry(gdf)
+def test_aoi_load_and_bbox(sample_vector_file):
+    """Tests loading valid vector files (GPKG & GeoJSON) and calculating bbox."""
+    handler = AOIHandler(sample_vector_file, target_crs="EPSG:4326")
+    handler.load_and_validate()
+
+    bbox = handler.get_bbox()
+    assert len(bbox) == 4
+    assert bbox[0] == pytest.approx(13.0)
+    assert bbox[1] == pytest.approx(47.8)
 
 
-def test_reproject_noop_when_already_4326():
-    gdf = _make_gdf(crs="EPSG:4326")
-    reprojected = reproject(gdf)
-    assert reprojected.crs.to_epsg() == 4326
+def test_aoi_file_not_found():
+    """Tests that a missing file raises AOIFileNotFoundError."""
+    handler = AOIHandler("non_existent_file.gpkg")
+    with pytest.raises(AOIFileNotFoundError):
+        handler.load_and_validate()
 
 
-def test_reproject_from_3857():
-    from pyproj import Transformer
-    t = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
-    minx, miny = t.transform(-1.0, 50.0)
-    maxx, maxy = t.transform(1.0, 52.0)
-    gdf = _make_gdf(minx=minx, miny=miny, maxx=maxx, maxy=maxy, crs="EPSG:3857")
-    reprojected = reproject(gdf)
-    assert reprojected.crs.to_epsg() == 4326
+def test_aoi_missing_crs(tmp_path):
+    """Tests that a dataset without CRS raises AOICRSError using GPKG format."""
+    poly = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
+    gdf = gpd.GeoDataFrame({"id": [1]}, geometry=[poly])
+
+    file_path = tmp_path / "no_crs.gpkg"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        gdf.to_file(file_path, driver="GPKG")
+
+    handler = AOIHandler(str(file_path))
+    with pytest.raises(AOICRSError):
+        handler.load_and_validate()
+
+
+@pytest.mark.parametrize("ext, driver", [(".gpkg", "GPKG"), (".geojson", "GeoJSON")])
+def test_aoi_reproject(tmp_path, ext, driver):
+    """Tests automatic reprojection from EPSG:4326 to a projected CRS."""
+    poly = Polygon([(13.0, 47.8), (13.1, 47.8), (13.1, 47.9), (13.0, 47.9), (13.0, 47.8)])
+    gdf = gpd.GeoDataFrame({"id": [1]}, geometry=[poly], crs="EPSG:4326")
+
+    file_path = tmp_path / f"reproject_test{ext}"
+    gdf.to_file(file_path, driver=driver)
+
+    handler = AOIHandler(str(file_path), target_crs="EPSG:32633")
+    reprojected_gdf = handler.load_and_validate()
+
+    assert reprojected_gdf.crs.to_string() == "EPSG:32633"
+
+
+@pytest.mark.parametrize("ext, driver", [(".gpkg", "GPKG"), (".geojson", "GeoJSON")])
+def test_aoi_empty_file(tmp_path, ext, driver):
+    """Tests that loading an empty vector dataset raises AOIGeometryError."""
+    gdf = gpd.GeoDataFrame(columns=["id", "geometry"], crs="EPSG:4326")
+
+    file_path = tmp_path / f"empty{ext}"
+    gdf.to_file(file_path, driver=driver)
+
+    handler = AOIHandler(str(file_path))
+    with pytest.raises(AOIGeometryError):
+        handler.load_and_validate()

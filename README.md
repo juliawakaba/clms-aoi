@@ -28,7 +28,7 @@ For users:
 ```bash
 pip install clms-aoi
 ```
-for devs
+For devs:
 1. Clone the repository
 2. Change directory into the cloned folder
 ```bash
@@ -41,6 +41,14 @@ python3 -m venv clms_aoi_env && source clms_aoi_env/bin/activate
 4. Do an editable install which means edits to the source code keep working without reinstalling
 ```bash
 pip install -e .
+```
+5. To run tests for this project
+```
+pip install pytest
+```
+and run: 
+```
+pytest
 ```
 ---
 
@@ -72,6 +80,16 @@ You can point to a different config file at runtime using the `--config` flag.
 ```bash
 # To check correct credentials 
 clms-aoi check-auth --config config/config.yaml
+
+# Run validation on valid file
+clms-aoi check-aoi --aoi tests/data/test_aoi.geojson
+clms-aoi check-aoi --aoi tests/data/test_aoi.gpkg
+
+# Run with verbose
+clms-aoi -v check-aoi --aoi tests/data/test_aoi.geojson
+
+# Test error handling
+clms-aoi check-aoi --aoi missing.geojson
 
 # Single year, chart output
 clms-aoi land-cover --aoi ./boundary.geojson --year 2020 --output ./out --format chart

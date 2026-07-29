@@ -1,3 +1,77 @@
+# ==========================================
+# Byte-compiled / Optimized / Native modules
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ==========================================
+# C extensions & Build artifacts
+# ==========================================
+build/
+bdist/
+dist/
+sdist/
+wheels/
+share/python-wheels/
+*.egg-info/
+.eggs/
+*.egg
+*.manifest
+*.spec
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+# Environment directories
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+psd_env/
+
+# ==========================================
+# Unit Testing & Coverage
+# ==========================================
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+htmlcov/
+.hypothesis/
+
+# ==========================================
+# Configuration & Credentials
+# ==========================================
+# Sensitive files (keep examples tracked, ignore local secrets)
+config.yaml
+secrets.yaml
+.env.local
+
+# ==========================================
+# IDE & Editor Files
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+
 __pycache__/
 *.py[cod]
 *.egg-info/
